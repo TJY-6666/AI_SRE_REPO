@@ -7,14 +7,6 @@ from flask import Flask, request, jsonify, render_template_string
 from google import genai
 
 app = Flask(__name__)
-app.config["TRUSTED_HOSTS"] = [
-    "localhost",
-    "127.0.0.1",
-    "log-receiver",
-    "log-receiver:5000",
-    "log_receiver_container",
-    "log_receiver_container:5000",
-]
 
 ATTACK_KEYWORDS = [
     "sql injection",

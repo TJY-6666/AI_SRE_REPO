@@ -1,0 +1,26 @@
+apiVersion: apps/v1 #self-healing
+kind: Deployment
+metadata:
+  name: log-generator-pod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: log-generator
+  template:
+    metadata:
+      labels:
+        app: log-generator
+    spec:
+      containers:
+      - name: log-generator-container
+        # 填入 Service A 的云端镜像地址
+        image: us-central1-docker.pkg.dev/gen-lang-client-0205187891/docker-dryrun-repo/log_generator_image:v1
+        env:
+        - name: SERVICE_B_URL
+          # 最强大的魔法登场：这里填的是 service-b.yaml 里的 Service 名字！K8s 的内部 DNS 会自动找到它。
+          value: "http://log-receiver-svc:5000/logs"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"

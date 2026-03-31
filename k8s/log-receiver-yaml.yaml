@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-receiver-pod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: log-receiver
+  template:
+    metadata:
+      labels:
+        app: log-receiver
+    spec:
+      containers:
+      - name: log-receiver-container
+        image: us-central1-docker.pkg.dev/gen-lang-client-0205187891/docker-dryrun-repo/log_receiver_image:v2
+        ports:
+        - containerPort: 5000
+        env:
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: gemini-api-key
+              key: GEMINI_API_KEY
+              optional: true
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: log-receiver-svc
+spec:
+  selector:
+    app: log-receiver
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+  type: ClusterIP
