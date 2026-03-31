@@ -7,6 +7,14 @@ from flask import Flask, request, jsonify, render_template_string
 from google import genai
 
 app = Flask(__name__)
+app.config["TRUSTED_HOSTS"] = [
+    "localhost",
+    "127.0.0.1",
+    "log-receiver",
+    "log-receiver:5000",
+    "log_receiver_container",
+    "log_receiver_container:5000",
+]
 
 ATTACK_KEYWORDS = [
     "sql injection",
@@ -21,7 +29,7 @@ MOCK_MESSAGE = (
     "**行动建议:** 因不确认攻击源真实意图，等待安全工程师授权，点击下方唤醒 Gemini 大模型进行意图溯源分析..."
 )
 
-# 用于在内存中缓存最新的威胁警告，方便前端实时拉取（为了教学简单，不用数据库）
+# 用于在内存中缓存最新日志，方便前端实时拉取（为了教学简单，不用数据库）
 alerts = []
 
 def is_threat(log_line: str) -> bool:
@@ -83,27 +91,33 @@ def receive_logs():
         
     log_line = data['log']
     
-    if is_threat(log_line):
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    threat_detected = is_threat(log_line)
+
+    if threat_detected:
         print(f"\n[{now}] THREAT DETECTED: {log_line}", flush=True)
         print("Holding AI analysis until manual trigger.", flush=True)
-        
-        # 将威胁记录存入全局列表 (保留最新的 20 条)，供前台网站提取
-        alert_id = str(uuid.uuid4())
-        alert = {
-            "id": alert_id,
-            "time": now,
-            "log": log_line,
-            "recommendation": MOCK_MESSAGE,
-            "analyzed": False
-        }
-        alerts.insert(0, alert)
-        if len(alerts) > 20:
-            alerts.pop()
-            
+    else:
+        print(f"[{now}] INFO LOG: {log_line}", flush=True)
+
+    # 将日志记录存入全局列表 (保留最新的 50 条)，供前台网站提取
+    alert_id = str(uuid.uuid4())
+    alert = {
+        "id": alert_id,
+        "time": now,
+        "log": log_line,
+        "recommendation": MOCK_MESSAGE if threat_detected else "Normal activity detected. No action required.",
+        "analyzed": False,
+        "is_threat": threat_detected,
+    }
+    alerts.insert(0, alert)
+    if len(alerts) > 50:
+        alerts.pop()
+
+    if threat_detected:
         return jsonify({"status": "threat_handled_mock", "id": alert_id}), 200
-        
-    return jsonify({"status": "ok"}), 200
+
+    return jsonify({"status": "ok", "id": alert_id}), 200
 
 # 唤醒 AI 的内网接口
 @app.route('/api/analyze/<alert_id>', methods=['POST'])
@@ -372,12 +386,18 @@ HTML_TEMPLATE = """
                     card.classList.add('active');
                 }
                 
+                const badgeLabel = alert.is_threat ? '⚠️ THREAT ISOLATED' : 'INFO LOG';
+                const badgeColor = alert.is_threat
+                    ? 'background-color: rgba(239, 68, 68, 0.2); color: #fca5a5;'
+                    : 'background-color: rgba(14, 165, 233, 0.18); color: #7dd3fc;';
+                const logColor = alert.is_threat ? '#ef4444' : '#38bdf8';
+
                 card.innerHTML = `
                     <div class="alert-header">
-                        <span class="badge">⚠️ THREAT ISOLATED</span>
+                        <span class="badge" style="${badgeColor}">${badgeLabel}</span>
                         <span class="time">${alert.time}</span>
                     </div>
-                    <div class="log-code" style="margin-bottom:0; padding:0.5rem;">> ${alert.log}</div>
+                    <div class="log-code" style="margin-bottom:0; padding:0.5rem; color:${logColor};">> ${alert.log}</div>
                 `;
                 card.onclick = () => selectAlert(index);
                 listEl.appendChild(card);
@@ -400,16 +420,25 @@ HTML_TEMPLATE = """
                 .replace(/\\*(.*?)\\*/g, '<em>$1</em>');
             
             let btnHtml = '';
-            if (!alert.analyzed) {
+            if (alert.is_threat && !alert.analyzed) {
                 btnHtml = `<button class="ai-button" onclick="triggerAI('${alert.id}')">🔮 授权并调用大模型进行深度溯源</button>`;
             }
 
+            const title = alert.is_threat
+                ? (alert.analyzed ? 'Gemini Analysis Strategy' : 'Base Firewall System')
+                : 'System Activity Overview';
+            const icon = alert.is_threat
+                ? (alert.analyzed ? '✨' : '🛡️')
+                : 'ℹ️';
+            const borderColor = alert.is_threat ? 'rgba(239, 68, 68, 0.4)' : 'rgba(14, 165, 233, 0.35)';
+            const logColor = alert.is_threat ? '#ef4444' : '#38bdf8';
+
             panel.innerHTML = `
                 <div class="detail-header">
-                    <span class="ai-icon">${alert.analyzed ? '✨' : '🛡️'}</span> ${alert.analyzed ? 'Gemini Analysis Strategy' : 'Base Firewall System'}
+                    <span class="ai-icon">${icon}</span> ${title}
                 </div>
                 <div class="time" style="margin-bottom: 1rem;">Log Time: ${alert.time}</div>
-                <div class="log-code" style="border-color: rgba(239, 68, 68, 0.4);">> ${alert.log}</div>
+                <div class="log-code" style="border-color: ${borderColor}; color:${logColor};">> ${alert.log}</div>
                 <div class="recommendation" style="margin-top: 1.5rem;">
                     ${formattedRec}
                 </div>

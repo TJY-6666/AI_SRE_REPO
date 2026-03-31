@@ -27,7 +27,7 @@ ATTACK_LOGS = [
 
 def generate_log():
     """生成一条日志（80%正常，20%攻击）"""
-    if random.random() < 0:
+    if random.random() < 0.2:
         # 80% 正常日志
         message = random.choice(NORMAL_LOGS)
         level = "INFO"
