@@ -1,7 +1,10 @@
 apiVersion: apps/v1
+###
 kind: Deployment
+###
 metadata:
   name: log-receiver-pod
+###
 spec:
   replicas: 1
   selector:
@@ -14,7 +17,9 @@ spec:
     spec:
       containers:
       - name: log-receiver-container
-        image: us-central1-docker.pkg.dev/gen-lang-client-0205187891/docker-dryrun-repo/log_receiver_image:v2
+        ## 填入 Service B 的云端镜像地址
+        image: us-central1-docker.pkg.dev/gen-lang-client-0205187891/docker-workshop-repo/log_receiver_image:v1
+        imagePullPolicy: Always
         ports:
         - containerPort: 5000
         env:
@@ -28,12 +33,12 @@ spec:
           requests:
             cpu: "250m"
             memory: "512Mi"
-
+###
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: log-receiver-svc
+  name: log-receiver
 spec:
   selector:
     app: log-receiver
