@@ -18,7 +18,7 @@ If this is a fresh machine, install these tools first:
 	- Free Google Cloud Credits Redemption: [https://trygcp.dev/claim/deveco-gdg-15f101be740](https://trygcp.dev/claim/deveco-gdg-15f101be740)
 	- Create a GCP project: [https://console.cloud.google.com/projectcreate](https://console.cloud.google.com/projectcreate)
 	- Enable billing: [https://console.cloud.google.com/billing](https://console.cloud.google.com/billing)
-5. [Google Cloud CLI (gcloud)](https://cloud.google.com/sdk/docs/install)
+5. Install Google Cloud SDK: [Google Cloud CLI (gcloud)](https://cloud.google.com/sdk/docs/install)
 6. Google AI Studio API key (required for real Gemini analysis)
 	- Open Google AI Studio: [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
 	- Click Create API key and copy the key value.
