@@ -24,12 +24,12 @@ ATTACK_KEYWORDS = [
 ]
 
 MOCK_MESSAGE = (
-    "🚨 [系统防火墙 - 基础拦截模式] 检测到明显的恶意流量注入行为。\n"
-    "**当前防御库状态:** 依靠传统安全策略初步拦截成功，已记录黑名单。\n"
-    "**行动建议:** 因不确认攻击源真实意图，等待安全工程师授权，点击下方唤醒 Gemini 大模型进行意图溯源分析..."
+    "🚨 [System Firewall - Baseline Block Mode] Clear malicious injection behavior detected.\n"
+    "**Current defense status:** Initial containment succeeded using baseline security policies. Source has been blacklisted.\n"
+    "**Recommended action:** Attack intent is still uncertain. Wait for security engineer approval, then trigger Gemini for deeper investigation."
 )
 
-# 用于在内存中缓存最新日志，方便前端实时拉取（为了教学简单，不用数据库）
+# In-memory cache of recent logs for the frontend polling endpoint (no database for workshop simplicity)
 alerts = []
 
 def is_threat(log_line: str) -> bool:
@@ -69,7 +69,7 @@ def ask_gemini(log_line: str) -> str:
     except Exception as exc:
         return f"[GEMINI ERROR] {exc}."
 
-# 接收黑客日志的内网接口
+# Internal endpoint to receive generator logs
 @app.route('/logs', methods=['POST'])
 def receive_logs():
     raw = request.get_data(as_text=True).strip()
@@ -100,7 +100,7 @@ def receive_logs():
     else:
         print(f"[{now}] INFO LOG: {log_line}", flush=True)
 
-    # 将日志记录存入全局列表 (保留最新的 50 条)，供前台网站提取
+    # Store recent logs in memory (keep latest 50 entries) for the dashboard
     alert_id = str(uuid.uuid4())
     alert = {
         "id": alert_id,
@@ -119,7 +119,7 @@ def receive_logs():
 
     return jsonify({"status": "ok", "id": alert_id}), 200
 
-# 唤醒 AI 的内网接口
+# Internal endpoint to trigger AI analysis
 @app.route('/api/analyze/<alert_id>', methods=['POST'])
 def analyze_alert(alert_id):
     for alert in alerts:
@@ -131,13 +131,13 @@ def analyze_alert(alert_id):
             return jsonify({"status": "success"})
     return jsonify({"status": "error", "message": "Alert not found"}), 404
 
-# 供前端网站每秒查询最新警报的接口
+# Frontend polling endpoint for latest alerts
 @app.route('/api/alerts', methods=['GET'])
 def get_alerts():
     return jsonify(alerts)
 
 
-# 视觉化超级酷炫的前端页面 (炫酷的赛博朋克深色风格)
+# Dashboard UI template
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -337,11 +337,11 @@ HTML_TEMPLATE = """
     <div class="subtitle">Kubernetes Cloud Security Intelligence | Powered by Gemini</div>
     
     <div class="container">
-        <!-- 左侧: 警告列表 -->
+        <!-- Left panel: alert list -->
         <div class="left-panel" id="alert-list">
         </div>
         
-        <!-- 右侧: AI解析面板 -->
+        <!-- Right panel: AI analysis -->
         <div class="right-panel" id="ai-panel">
             <div class="watermark">AI SYS</div>
             <div style="text-align: center; color: var(--text-muted); margin-top: 40%;">
@@ -421,7 +421,7 @@ HTML_TEMPLATE = """
             
             let btnHtml = '';
             if (alert.is_threat && !alert.analyzed) {
-                btnHtml = `<button class="ai-button" onclick="triggerAI('${alert.id}')">🔮 授权并调用大模型进行深度溯源</button>`;
+                btnHtml = `<button class="ai-button" onclick="triggerAI('${alert.id}')">🔮 Authorize and Run Deep AI Investigation</button>`;
             }
 
             const title = alert.is_threat
@@ -450,7 +450,7 @@ HTML_TEMPLATE = """
             const btn = document.querySelector('.ai-button');
             if (btn) {
                 btn.disabled = true;
-                btn.innerHTML = `<span class="pulse" style="background:#fff;box-shadow:none;"></span> Google Gemini 正在深度思考中...`;
+                btn.innerHTML = `<span class="pulse" style="background:#fff;box-shadow:none;"></span> Google Gemini is analyzing...`;
             }
             try {
                 await fetch(`/api/analyze/${alertId}`, { method: 'POST' });
@@ -459,7 +459,7 @@ HTML_TEMPLATE = """
                 console.error(e);
                 if(btn) {
                     btn.disabled = false;
-                    btn.innerHTML = `❌ 调用失败，点击重试`;
+                    btn.innerHTML = `❌ Request failed, click to retry`;
                 }
             }
         }
@@ -471,7 +471,7 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# 把网站大门敞开，当你在浏览器访问 / 时，返回上面那个极为惊艳的 HTML
+# Render dashboard HTML at root route
 @app.route('/', methods=['GET'])
 def dashboard():
     return render_template_string(HTML_TEMPLATE)

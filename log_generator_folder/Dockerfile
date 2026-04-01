@@ -1,17 +1,17 @@
-# 使用Python 3.11官方镜像作为基础镜像
+# Use official Python 3.11 image as the base image
 FROM python:3.11-slim
 
-# 设置工作目录
+# Set working directory
 WORKDIR /app
 
-# 复制requirements.txt（即使是空的也要复制，保持规范）
+# Copy requirements.txt (copy even if empty for consistency)
 COPY requirements.txt .
 
-# 安装依赖（如果有的话）
+# Install dependencies (if any)
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 复制应用代码
+# Copy application code
 COPY app.py .
 
-# 设置启动命令
+# Set startup command
 CMD ["python", "app.py"]

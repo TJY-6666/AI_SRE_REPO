@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: log-receiver-container
-        ## 填入 Service B 的云端镜像地址
+        ## Replace with the cloud image URI for Service B
         image: us-central1-docker.pkg.dev/gen-lang-client-0205187891/docker-workshop-repo/log_receiver_image:v1
         imagePullPolicy: Always
         ports:

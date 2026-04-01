@@ -3,7 +3,7 @@ import random
 from datetime import datetime
 import requests
 
-# 正常日志列表
+# Normal log samples
 NORMAL_LOGS = [
     "Database query executed",
     "User login successful",
@@ -15,7 +15,7 @@ NORMAL_LOGS = [
     "Connection established",
 ]
 
-# 攻击日志列表（包含攻击特征关键词）
+# Attack log samples (contain attack signature keywords)
 ATTACK_LOGS = [
     "POTENTIAL ATTACK: SQL Injection attempt detected",
     "POTENTIAL ATTACK: Multiple failed login attempts from 203.0.113.45",
@@ -26,30 +26,30 @@ ATTACK_LOGS = [
 ]
 
 def generate_log():
-    """生成一条日志（80%正常，20%攻击）"""
+    """Generate one log line (current behavior: 20% normal, 80% attack)."""
     if random.random() < 0.2:
-        # 80% 正常日志
+        # Normal log path
         message = random.choice(NORMAL_LOGS)
         level = "INFO"
     else:
-        # 20% 攻击日志
+        # Attack log path
         message = random.choice(ATTACK_LOGS)
         level = "WARN"
     
-    # 生成时间戳
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]  # 毫秒级
+    # Generate timestamp
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]  # Millisecond precision
     
-    # 格式化日志
+    # Format log line
     log = f"[{timestamp}] {level}: {message}"
     return log
 
 def main():
-    """主函数：无限循环生成日志"""
+    """Main loop: generate logs continuously."""
     print("Service A started - Hacker attack log generator", flush=True)
     print("Sending logs to Service B...", flush=True)
     
-    # 获取 Service B 的地址，本地测试默认为 localhost:5000
-    # 在 k8s 中，我们会通过环境变量 SERVICE_B_URL 改变它的值
+    # Read Service B URL, defaulting to localhost for local testing.
+    # In Kubernetes, this is provided via SERVICE_B_URL.
     import os
     target_url = os.getenv("SERVICE_B_URL", "http://localhost:5000/logs")
     
@@ -59,10 +59,10 @@ def main():
             print(f"Generated: {log}", flush=True)
             
             try:
-                # 包装成 JSON 发送 POST 请求给 Service B
+                # Send to Service B as JSON via POST
                 response = requests.post(target_url, json={"log": log}, timeout=2)
                 
-                # 如果是攻击日志并且 Service B 处理了，我们抓取它的回复
+                # If Service B handled a threat log, print the recommendation.
                 if response.status_code == 200:
                     data = response.json()
                     if data.get("status") == "threat_handled_mock":
@@ -71,7 +71,7 @@ def main():
             except Exception as e:
                 print(f"Failed to send to Service B: {e}")
                 
-            time.sleep(15)  # 每15秒生成一条日志
+            time.sleep(15)  # Generate one log every 15 seconds
     except KeyboardInterrupt:
         print("\nService A stopped", flush=True)
 
