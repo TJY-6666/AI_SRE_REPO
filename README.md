@@ -98,7 +98,7 @@ To stop the app, press Ctrl + C, then return to the root folder:
 cd ..
 ```
 
-### 2. Optional: Run the Local Attack Log Generator
+### 2. Run the Local Attack Log Generator
 
 ```powershell
 cd log_generator_folder
@@ -140,13 +140,13 @@ docker network create sre-network
 Start receiver:
 
 ```powershell
-docker run -d --name log_receiver_container --network sre-network --network-alias log-receiver -e GEMINI_API_KEY="<your-gemini-api-key>" -p 5000:5000 log_receiver_image:v1
+docker run -it --name log_receiver_container --network sre-network --network-alias log-receiver -e GEMINI_API_KEY="<your-gemini-api-key>" -p 5000:5000 log_receiver_image:v1
 ```
 
 Start generator:
 
 ```powershell
-docker run -d --name log_generator_container --network sre-network -e SERVICE_B_URL="http://log-receiver:5000/logs" log_generator_image:v1
+docker run -it --name log_generator_container --network sre-network -e SERVICE_B_URL="http://log-receiver:5000/logs" log_generator_image:v1
 ```
 
 Refresh [http://localhost:5000/](http://localhost:5000/).
@@ -206,13 +206,28 @@ docker push us-central1-docker.pkg.dev/<your-gcp-project-id>/<your-artifact-regi
 docker push us-central1-docker.pkg.dev/<your-gcp-project-id>/<your-artifact-registry-repo>/log_generator_image:v1
 ```
 
-### 4. Get GKE Credentials
+### 4. Update Kubernetes YAML Image URIs
+
+Before applying the manifests, update the `image:` field in these files so they match the exact image URIs you just pushed:
+- `k8s/log-generator-yaml.yaml`
+- `k8s/log-receiver-yaml.yaml`
+
+Replace the example image URIs with your own:
+
+```yaml
+image: us-central1-docker.pkg.dev/<your-gcp-project-id>/<your-artifact-registry-repo>/log_generator_image:v1
+image: us-central1-docker.pkg.dev/<your-gcp-project-id>/<your-artifact-registry-repo>/log_receiver_image:v1
+```
+
+If you skip this step, Kubernetes will try to pull the sample images from the YAML files instead of your own images.
+
+### 5. Get GKE Credentials (Copy from cluster "connect")
 
 ```powershell
 gcloud container clusters get-credentials docker-dryrun-cluster --region us-central1 --project <your-gcp-project-id>
 ```
 
-### 5. Create Gemini Secret and Apply Kubernetes Manifests
+### 6. Create Gemini Secret and Apply Kubernetes Manifests
 
 ```powershell
 kubectl create secret generic gemini-api-key --from-literal=GEMINI_API_KEY="<your-gemini-api-key>" --dry-run=client -o yaml | kubectl apply -f -
@@ -222,7 +237,7 @@ kubectl get pods -w
 
 Wait until pods are Running, then stop watching with Ctrl + C.
 
-### 6. Access the App via Port Forward
+### 7. Access the App via Port Forward
 
 ```powershell
 kubectl port-forward svc/log-receiver 5000:5000
