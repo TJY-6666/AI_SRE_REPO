@@ -67,7 +67,11 @@ def main():
                     data = response.json()
                     if data.get("status") == "threat_handled_mock":
                         print("🔥 [AI ASSISTANT TRIGGERED]")
-                        print(data.get("recommendation") + "\n", flush=True)
+                        recommendation = data.get("recommendation")
+                        if recommendation:
+                            print(f"{recommendation}\n", flush=True)
+                        else:
+                            print("Threat isolated by Service B. Open dashboard to authorize deep AI investigation.\n", flush=True)
             except Exception as e:
                 print(f"Failed to send to Service B: {e}")
                 

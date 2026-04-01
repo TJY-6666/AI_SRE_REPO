@@ -115,7 +115,13 @@ def receive_logs():
         alerts.pop()
 
     if threat_detected:
-        return jsonify({"status": "threat_handled_mock", "id": alert_id}), 200
+        return jsonify(
+            {
+                "status": "threat_handled_mock",
+                "id": alert_id,
+                "recommendation": MOCK_MESSAGE,
+            }
+        ), 200
 
     return jsonify({"status": "ok", "id": alert_id}), 200
 
