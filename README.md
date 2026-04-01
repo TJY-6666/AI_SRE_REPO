@@ -19,9 +19,14 @@ If this is a fresh machine, install these tools first:
 	- Create a GCP project: [https://console.cloud.google.com/projectcreate](https://console.cloud.google.com/projectcreate)
 	- Enable billing: [https://console.cloud.google.com/billing](https://console.cloud.google.com/billing)
 5. [Google Cloud CLI (gcloud)](https://cloud.google.com/sdk/docs/install)
+6. Google AI Studio API key (required for real Gemini analysis)
+	- Open Google AI Studio: [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
+	- Click Create API key and copy the key value.
+	- Keep this key safe. You will use it as `GEMINI_API_KEY` in local, Docker, and Kubernetes steps.
 
 Important:
 - Complete GCP account/project/billing and gcloud setup before class. Otherwise, Artifact Registry, GKE auth, and image push steps will fail.
+- Create your Google AI Studio API key before class. Without it, receiver analysis stays in MOCK MODE.
 - kubectl is usually installed automatically with Docker Desktop.
 
 ---
@@ -76,11 +81,16 @@ venv\Scripts\activate
 # 4) Install dependencies
 pip install -r requirements.txt
 
-# 5) Start the app
+# 5) Set Gemini API key for this terminal session
+$env:GEMINI_API_KEY="<your-gemini-api-key>"
+
+# 6) Start the app
 python app.py
 ```
 
 Open [http://localhost:5000/](http://localhost:5000/) in your browser.
+
+If you skip `GEMINI_API_KEY`, the app still runs but returns mock analysis text.
 
 To stop the app, press Ctrl + C, then return to the root folder:
 
@@ -130,7 +140,7 @@ docker network create sre-network
 Start receiver:
 
 ```powershell
-docker run -d --name log_receiver_container --network sre-network --network-alias log-receiver -p 5000:5000 log_receiver_image:v1
+docker run -d --name log_receiver_container --network sre-network --network-alias log-receiver -e GEMINI_API_KEY="<your-gemini-api-key>" -p 5000:5000 log_receiver_image:v1
 ```
 
 Start generator:
@@ -202,9 +212,10 @@ docker push us-central1-docker.pkg.dev/<your-gcp-project-id>/<your-artifact-regi
 gcloud container clusters get-credentials docker-dryrun-cluster --region us-central1 --project <your-gcp-project-id>
 ```
 
-### 5. Apply Kubernetes Manifests
+### 5. Create Gemini Secret and Apply Kubernetes Manifests
 
 ```powershell
+kubectl create secret generic gemini-api-key --from-literal=GEMINI_API_KEY="<your-gemini-api-key>" --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -f k8s/
 kubectl get pods -w
 ```
