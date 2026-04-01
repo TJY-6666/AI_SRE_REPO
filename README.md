@@ -13,6 +13,7 @@ If this is a fresh machine, install these tools first:
 2. [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 	- Start Docker Desktop after installation and keep it running.
 3. Code editor (recommended): [Visual Studio Code](https://code.visualstudio.com/)
+	- Install Docker extension in VSCode or any IDE [https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker)
 4. GCP account and project (required)
 	- Google Cloud sign-up/free tier: [https://cloud.google.com/free](https://cloud.google.com/free)
 	- Free Google Cloud Credits Redemption: [https://trygcp.dev/claim/deveco-gdg-15f101be740](https://trygcp.dev/claim/deveco-gdg-15f101be740)
