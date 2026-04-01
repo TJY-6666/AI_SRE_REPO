@@ -15,7 +15,7 @@ If this is a fresh machine, install these tools first:
 3. Code editor (recommended): [Visual Studio Code](https://code.visualstudio.com/)
 4. GCP account and project (required)
 	- Google Cloud sign-up/free tier: [https://cloud.google.com/free](https://cloud.google.com/free)
-	- Google Account sign-up: [https://accounts.google.com/signup](https://accounts.google.com/signup)
+	- Free Google Cloud Credits Redemption: [https://trygcp.dev/claim/deveco-gdg-15f101be740](https://trygcp.dev/claim/deveco-gdg-15f101be740)
 	- Create a GCP project: [https://console.cloud.google.com/projectcreate](https://console.cloud.google.com/projectcreate)
 	- Enable billing: [https://console.cloud.google.com/billing](https://console.cloud.google.com/billing)
 5. [Google Cloud CLI (gcloud)](https://cloud.google.com/sdk/docs/install)
@@ -25,8 +25,8 @@ If this is a fresh machine, install these tools first:
 	- Keep this key safe. You will use it as `GEMINI_API_KEY` in local, Docker, and Kubernetes steps.
 
 Important:
-- Complete GCP account/project/billing and gcloud setup before class. Otherwise, Artifact Registry, GKE auth, and image push steps will fail.
-- Create your Google AI Studio API key before class. Without it, receiver analysis stays in MOCK MODE.
+- Complete GCP account/project/billing and gcloud setup before workshop. Otherwise, Artifact Registry, GKE auth, and image push steps will fail.
+- Create your Google AI Studio API key before class.
 - kubectl is usually installed automatically with Docker Desktop.
 
 ---
@@ -77,6 +77,9 @@ python -m venv venv
 # 3) Activate the virtual environment
 venv\Scripts\activate
 # Mac/Linux: source venv/bin/activate
+
+# run this if Windows machine blocks you from running script
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 # 4) Install dependencies
 pip install -r requirements.txt
