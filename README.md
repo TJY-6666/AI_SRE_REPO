@@ -38,7 +38,7 @@ cd $HOME\Desktop
 3. Clone the repository:
 
 ```powershell
-git clone <instructor-repo-url>
+git clone https://github.com/TJY-6666/AI_SRE_REPO.git
 ```
 
 4. Enter the workshop folder:
