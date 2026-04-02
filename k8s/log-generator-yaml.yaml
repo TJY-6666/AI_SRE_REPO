@@ -18,7 +18,7 @@ spec:
       containers:
       - name: log-generator-container
         # Replace with the cloud image URI for Service A
-        image: us-central1-docker.pkg.dev/gen-lang-client-0205187891/k8s-workshop-repo/log_generator_image:v1
+        image: us-central1-docker.pkg.dev/k8s-workshop-project-492103/k8s-workshop-repo/log_generator_image:v1    
         imagePullPolicy: Always
         env:
         - name: SERVICE_B_URL

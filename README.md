@@ -248,3 +248,155 @@ kubectl port-forward svc/log-receiver 5000:5000
 Open [http://localhost:5000/](http://localhost:5000/) again.
 
 You have now completed a full path from local Python app to containerized microservices on Kubernetes.
+
+---
+
+## Simple Demo: Self-Healing
+This is the easiest Kubernetes demo to show participants.
+
+What participants should understand:
+- A `Deployment` wants the app to always keep the desired number of Pods running.
+- If one Pod dies, Kubernetes creates a new one automatically.
+
+Commands:
+
+```powershell
+kubectl get pods -w
+```
+
+Open a second terminal and delete one app Pod:
+
+```powershell
+kubectl delete pod -l app=log-receiver
+```
+
+What participants will see:
+- The old Pod becomes `Terminating`
+- A new Pod is created automatically
+- After a short while, the new Pod becomes `Running`
+
+Simple explanation to say out loud:
+- "I did not manually recreate the Pod."
+- "The Deployment noticed the Pod was missing and Kubernetes healed it for me."
+
+If you want, you can also do the same for the generator:
+
+```powershell
+kubectl delete pod -l app=log-generator
+```
+
+---
+
+## Simple Demo: Auto Scaling
+For the simplest demo, scale the `log-receiver` Deployment by CPU usage.
+
+What participants should understand:
+- We define a minimum and maximum number of Pods.
+- When CPU usage goes up, Kubernetes adds more Pods.
+- When load drops, Kubernetes scales back down.
+
+### 1. Create an HPA
+
+```powershell
+kubectl autoscale deployment log-receiver-pod --cpu-percent=50 --min=1 --max=3
+kubectl get hpa
+```
+
+If `TARGETS` shows a CPU percentage, the HPA is ready.
+
+### 2. Watch scaling happen
+
+In one terminal:
+
+```powershell
+kubectl get hpa -w
+```
+
+In another terminal:
+
+```powershell
+kubectl get pods -w
+```
+
+### 3. Generate CPU load inside the container
+
+Open a third terminal and run:
+
+```powershell
+kubectl exec deploy/log-receiver-pod -- python -c "while True: pass"
+```
+
+Wait around 1 to 3 minutes.
+
+What participants will usually see:
+- CPU usage rises
+- HPA increases replicas from `1` to `2` or `3`
+- New Pods are created automatically
+
+Stop the load with `Ctrl + C`.
+
+After a few more minutes, Kubernetes should scale back down toward 1 replica.
+
+### 4. Cleanup after demo
+
+```powershell
+kubectl delete hpa log-receiver-pod
+kubectl scale deployment log-receiver-pod --replicas=1
+```
+
+### Troubleshooting
+- If autoscaling does not move, wait a bit longer. HPA is not instant.
+- If `kubectl get hpa` does not show CPU metrics, the cluster metrics pipeline is not ready yet.
+- GKE Autopilot usually supports this demo, but sometimes metrics take a few minutes to appear after deployment.
+
+---
+
+## Reset to Workshop State
+After the demo, use these commands to return everything to the original workshop state.
+
+### 1. Remove the autoscaling settings
+
+```powershell
+kubectl delete hpa log-receiver-pod
+kubectl scale deployment log-receiver-pod --replicas=1
+```
+
+This brings `log-receiver` back to a single Pod, which matches the original YAML.
+
+### 2. Check that only the normal workshop Pods remain
+
+```powershell
+kubectl get pods
+```
+
+You should end up with:
+- `1` Pod for `log-receiver`
+- `1` Pod for `log-generator`
+
+If extra Pods are still terminating, wait a little and run `kubectl get pods` again.
+
+### 3. Stop port-forward if it is still running
+
+If you still have this running in a terminal:
+
+```powershell
+kubectl port-forward svc/log-receiver 5000:5000
+```
+
+stop it with `Ctrl + C`.
+
+### 4. Optional full cleanup
+
+If you want to completely remove the workshop app from the cluster:
+
+```powershell
+kubectl delete -f k8s/
+kubectl delete secret gemini-api-key
+```
+
+Later, when you want to start the workshop again, just run:
+
+```powershell
+kubectl create secret generic gemini-api-key --from-literal=GEMINI_API_KEY="<your-gemini-api-key>" --dry-run=client -o yaml | kubectl apply -f -
+kubectl apply -f k8s/
+```
