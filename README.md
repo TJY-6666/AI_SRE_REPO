@@ -295,7 +295,7 @@ What participants should understand:
 - When CPU usage goes up, Kubernetes adds more Pods.
 - When load drops, Kubernetes scales back down.
 
-### 1. Create an HPA
+### 1. Create an Kubernetes Horizontal Pod Autoscaler (HPA)
 
 ```powershell
 kubectl autoscale deployment log-receiver-pod --cpu-percent=50 --min=1 --max=3
