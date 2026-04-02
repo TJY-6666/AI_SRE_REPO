@@ -18,7 +18,7 @@ spec:
       containers:
       - name: log-receiver-container
         ## Replace with the cloud image URI for Service B
-        image: us-central1-docker.pkg.dev/gen-lang-client-0205187891/docker-workshop-repo/log_receiver_image:v1
+        image: us-central1-docker.pkg.dev/gen-lang-client-0205187891/k8s-workshop-repo/log_receiver_image:v1
         imagePullPolicy: Always
         ports:
         - containerPort: 5000
